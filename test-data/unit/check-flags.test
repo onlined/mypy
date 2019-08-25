@@ -1207,3 +1207,15 @@ A = List  # OK
 B = List[A]  # E:10: Missing type parameters for generic type "A"
 x: A  # E:4: Missing type parameters for generic type "A"
 [builtins fixtures/list.pyi]
+
+[case testDisallowUntypedCallsAny]
+# flags: --disallow-untyped-calls
+from typing import Any
+
+f: Any
+f()  # E: Call to untyped function "f" in typed context
+
+[case testDisallowUntypedCallsUnknownImport]
+# flags: --disallow-untyped-calls
+from m import f  # type: ignore
+f()  # E: Call to untyped function "f" in typed context

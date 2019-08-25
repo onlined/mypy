@@ -30,7 +30,7 @@ from mypy.nodes import (
     TypeInfo, Context, MypyFile, op_methods, FuncDef, reverse_builtin_aliases,
     ARG_POS, ARG_OPT, ARG_NAMED, ARG_NAMED_OPT, ARG_STAR, ARG_STAR2,
     ReturnStmt, NameExpr, Var, CONTRAVARIANT, COVARIANT, SymbolNode,
-    CallExpr
+    CallExpr, Expression, MemberExpr
 )
 from mypy.subtypes import (
     is_subtype, find_member, get_member_flags,
@@ -318,8 +318,14 @@ class MessageBuilder:
         self.fail('{} not callable'.format(format_type(typ)), context)
         return AnyType(TypeOfAny.from_error)
 
-    def untyped_function_call(self, callee: CallableType, context: Context) -> Type:
-        name = callable_name(callee) or '(unknown)'
+    def untyped_function_call(self, callee: Union[CallableType, Expression], context: Context
+                              ) -> Type:
+        if isinstance(callee, (NameExpr, MemberExpr)):
+            name = '"{}"'.format(callee.name)
+        elif isinstance(callee, CallableType):
+            name = callable_name(callee) or '(unknown)'
+        else:
+            name = '(unknown)'
         self.fail('Call to untyped function {} in typed context'.format(name), context,
                   code=codes.NO_UNTYPED_CALL)
         return AnyType(TypeOfAny.from_error)

@@ -297,11 +297,11 @@ class ExpressionChecker(ExpressionVisitor[Type]):
                                         ret_type=self.object_type(),
                                         fallback=self.named_type('builtins.function'))
         callee_type = get_proper_type(self.accept(e.callee, type_context, always_allow_any=True))
-        if (self.chk.options.disallow_untyped_calls and
-                self.chk.in_checked_function() and
-                isinstance(callee_type, CallableType)
-                and callee_type.implicit):
-            return self.msg.untyped_function_call(callee_type, e)
+        if self.chk.options.disallow_untyped_calls and self.chk.in_checked_function():
+            if isinstance(callee_type, AnyType) and not self.chk.current_node_deferred:
+                return self.msg.untyped_function_call(e.callee, e)
+            if isinstance(callee_type, CallableType) and callee_type.implicit:
+                return self.msg.untyped_function_call(callee_type, e)
         # Figure out the full name of the callee for plugin lookup.
         object_type = None
         member = None
